@@ -114,6 +114,7 @@ public class Dictionary {
 	
 	//O(n) n - count of anagrams and single words
 	public int countOfWordsInDictionary(){
+		if(cache.values().size()<1) return 0;
 		return cache.values().stream().
 		map(v->v.size()).
 		reduce((s1, s2)->s1+s2).get();
@@ -121,6 +122,7 @@ public class Dictionary {
 	
 	//O(n) n - count of anagrams and single words
 	public int maxWordLength(){
+		if(cache.keySet().size()<1) return 0;
 		return cache.keySet().stream().
 		map(k->k.length()).
 		max(Comparator.comparing(Integer::valueOf)).
@@ -129,6 +131,7 @@ public class Dictionary {
 	
 	//O(n) n - count of anagrams and single words
 	public int minWordLength(){
+		if(cache.keySet().size()<1) return 0;
 		return cache.keySet().stream().
 		map(k->k.length()).
 		min(Comparator.comparing(Integer::valueOf)).
@@ -137,12 +140,12 @@ public class Dictionary {
 	
 	//O(n) n - count of anagrams and single words
 	public long avgWordLength(){
-		
+		if(cache.keySet().size()<1) return 0;
 		IntSummaryStatistics stats = 
 			cache.keySet().stream().
 			mapToInt(k->k.length()).
 		    summaryStatistics();
-		
+
 		return Math.round(stats.getAverage());
 	}
 	
@@ -152,7 +155,7 @@ public class Dictionary {
 		map(k->k.length()).
 		sorted(Comparator.comparingInt(Integer::intValue)).
         collect(Collectors.toList());
-		
+		if(list.size()<1) return 0;
 		return list.get(Math.round(list.size()/2));
 	}
 }
