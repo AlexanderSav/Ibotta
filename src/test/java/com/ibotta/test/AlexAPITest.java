@@ -5,6 +5,7 @@ import static io.restassured.RestAssured.given;
 import java.io.IOException;
 
 import org.apache.commons.io.IOUtils;
+import org.hamcrest.Matchers;
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +35,7 @@ public class AlexAPITest {
     
     @AfterEach
     void tearDown() {
-    	//deleteWords();
+    	deleteWords();
     }
     
 	/**
@@ -99,13 +100,23 @@ public class AlexAPITest {
 	@Tag("main")
 	@Test
 	public void getAllAnagaramsWithSizeMoreOrEqualsThan() {
-		int size = 4;
+		int size = 1;
 		given().
 		when().
 			get(HOST + "/anagrams?size=" + size).
 		then().
 			assertThat().
-			statusCode(200);
+			statusCode(200).
+			body("isEmpty()", Matchers.is(size<=1));
+		
+		size = 2;
+		given().
+		when().
+			get(HOST + "/anagrams?size=" + size).
+		then().
+			assertThat().
+			statusCode(200).
+			body("anagrams[0].size()", Is.is(size));
 	}
 	
 	/**
