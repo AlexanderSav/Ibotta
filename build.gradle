@@ -31,7 +31,9 @@ dependencies {
 test {
     useJUnitPlatform {
         includeTags 'main'
-        //excludeTags 'optional'
         includeTags 'optional'
+        
+        //excludeTags 'main'
+        //excludeTags 'optional'
     }
 }

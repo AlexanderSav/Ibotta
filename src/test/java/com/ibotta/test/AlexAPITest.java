@@ -2,6 +2,8 @@ package com.ibotta.test;
 
 import static io.restassured.RestAssured.given;
 
+import java.io.IOException;
+
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.AfterEach;
@@ -18,7 +20,6 @@ import org.junit.jupiter.api.Test;
  *      An introduction to testing api's using Rest Assured</a>
  *
  */
-@Tag("main")
 public class AlexAPITest {
 	
 	private static final String HOST = "http://localhost:3000";
@@ -33,7 +34,7 @@ public class AlexAPITest {
     
     @AfterEach
     void tearDown() {
-    	deleteWords();
+    	//deleteWords();
     }
     
 	/**
@@ -80,6 +81,7 @@ public class AlexAPITest {
 	 * GET /anagrams 
 	 * get all anagrams from the data store
 	 */
+	@Tag("main")
 	@Test
 	public void getAllAnagarams() {
 		given().
@@ -91,14 +93,16 @@ public class AlexAPITest {
 	}
 	
 	/**
-	 * GET /anagrams/{word} 
-	 * get anagrams by word from the data store, limit is optional
+	 * GET /anagrams 
+	 * get all anagrams from the data store, size is optional
 	 */
+	@Tag("main")
 	@Test
-	public void getAnagramsByWord() {
+	public void getAllAnagaramsWithSizeMoreOrEqualsThan() {
+		int size = 4;
 		given().
 		when().
-			get(HOST + "/anagrams/" + word).
+			get(HOST + "/anagrams?size=" + size).
 		then().
 			assertThat().
 			statusCode(200);
@@ -107,16 +111,87 @@ public class AlexAPITest {
 	/**
 	 * GET /anagrams/{word} 
 	 * get anagrams by word from the data store, limit is optional
+	 * @return 
 	 */
+	@Tag("main")
+	@Test
+	public void getAnagramsByWord() {
+		given().
+		when().
+			get(HOST + "/anagrams/" + word).
+		then().
+			assertThat().
+			statusCode(200).
+			body("anagrams.size()", Is.is(3));
+	}
+	
+	/**
+	 * GET /anagrams/{word} 
+	 * get anagrams by word from the data store, limit is optional
+	 */
+	@Tag("main")
 	@Test
 	public void getAnagramsByWordWithLimit() {
-		final String limit = "1";
+		final int limit = 1;
 		given().
 		when().
 			get(HOST + "/anagrams/" + word + "?limit=" + limit).
 		then().
 			assertThat().
-			statusCode(200);
+			statusCode(200).
+			body("anagrams.size()", Is.is(limit));
+	}
+	
+	/**
+	 * GET /anagrams/{word} 
+	 * get anagrams by word from the data store, self is optional
+	 */
+	@Tag("main")
+	@Test
+	public void getAnagramsByWordWithFlagSelf() {
+		final String self = "true";
+		given().
+		when().
+			get(HOST + "/anagrams/" + word + "?self=" + self).
+		then().
+			assertThat().
+			statusCode(200).
+			body("anagrams.size()", Is.is(2));
+	}
+	
+	/**
+	 * GET /anagrams/{word} 
+	 * get anagrams by word from the data store, self is optional
+	 */
+	@Tag("main")
+	@Test
+	public void getAnagramsByWordWithLimitAndFlagSelf() {
+		final int limit = 1;
+		final String self = "true";
+		given().
+		when().
+			get(HOST + "/anagrams/" + word + "?self=" + self+"&limit=" + limit).
+		then().
+			assertThat().
+			statusCode(200).
+			body("anagrams.size()", Is.is(1));
+	}
+
+	/**
+	 * DELETE /words/{word} 
+	 * delete a single word from the data store
+	 */
+	@Tag("main")
+	@Test
+	public void deleteWord() {
+		given().
+		when().
+			delete(HOST + "/words/" + word).
+		then().
+			log().
+			ifError().
+			assertThat().
+			statusCode(204);
 	}
 
 	/**
@@ -129,22 +204,6 @@ public class AlexAPITest {
 		given().
 		when().
 			delete(HOST + "/anagrams/" + word).
-		then().
-			log().
-			ifError().
-			assertThat().
-			statusCode(204);
-	}
-	
-	/**
-	 * DELETE /words/{word} 
-	 * delete a single word from the data store
-	 */
-	@Test
-	public void deleteWord() {
-		given().
-		when().
-			delete(HOST + "/words/" + word).
 		then().
 			log().
 			ifError().
@@ -183,7 +242,7 @@ public class AlexAPITest {
 			assertThat().
 			statusCode(200).
 			assertThat().
-			body("result", Is.is(6));
+			body("result", Is.is(11));
 	}
 	
 	/**
@@ -200,7 +259,7 @@ public class AlexAPITest {
 			assertThat().
 			statusCode(200).
 			assertThat().
-			body("result", Is.is(5));
+			body("result", Is.is(6));
 	}
 	
 	/**
@@ -217,7 +276,7 @@ public class AlexAPITest {
 			assertThat().
 			statusCode(200).
 			assertThat().
-			body("result", Is.is(3));
+			body("result", Is.is(2));
 	}
 	
 	/**
@@ -235,5 +294,45 @@ public class AlexAPITest {
 			statusCode(200).
 			assertThat().
 			body("result", Is.is(5));
+	}
+	
+	/**
+	 * GET /anagrams/most 
+	 * get words with the most anagrams
+	 */
+	@Tag("optional")
+	@Test
+	public void getMostAnagrams() {
+		given().
+		when().
+			get(HOST + "/anagrams/most").
+		then().
+			assertThat().
+			statusCode(200).
+			body("anagrams.size()", Is.is(4));
+	}
+	
+	/**
+	 * POST /anagrams/check 
+	 * get 0-false or 1-true
+	 * @throws IOException 
+	 */
+	@Tag("optional")
+	@Test
+	public void checkIfAllWordsAreInOneAnagramSet() throws IOException {
+		String jsonTxt = IOUtils.toString(
+	      this.getClass().getClassLoader().getResourceAsStream("check.json"),
+	      "UTF-8"
+	    );
+		
+		given().
+			body(jsonTxt).
+			header("Content-Type", "application/json").
+		when().
+			post(HOST + "/anagrams/check").
+		then().
+			assertThat().
+			statusCode(200).
+			body("result", Is.is(1));
 	}
 }

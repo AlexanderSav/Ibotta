@@ -35,14 +35,22 @@ public class AlexAPI {
 	@Autowired
 	AnagramService service;
 
-	@ApiOperation(value = "get all anagrams from the data store", response = List.class)
+	@ApiOperation(value = "get all anagrams from the data store, size is optional", response = List.class)
 	@ApiResponses(value = { 
 			@ApiResponse(code = 200, message = "Anagrams retrieved. Note that a word is not considered to be its own anagram"),
 			@ApiResponse(code = 500, message = "Internal server error"),
 			@ApiResponse(code = 404, message = "Anagrams not found") })
 	@RequestMapping(value = "/anagrams", method = RequestMethod.GET, produces = "application/json")
-	public ResponseEntity<List<AnagramModel>> getAnagrams() {
-		return new ResponseEntity<List<AnagramModel>>(service.getAnagrams(), HttpStatus.OK);
+	public ResponseEntity<List<AnagramModel>> getAnagrams(@RequestParam(value = "size") Optional<String> size) {
+		Optional<Integer> intSize = Optional.empty();
+		if(size.isPresent()){
+			try{
+				intSize = Optional.of(Integer.parseInt(size.get()));
+			}catch(NumberFormatException e){
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+			}
+		} 
+		return new ResponseEntity<List<AnagramModel>>(service.getAnagrams(intSize), HttpStatus.OK);
 	}
 	
 	@ApiOperation(value = "get anagrams by word from the data store, limit is optional", response = AnagramModel.class)
@@ -52,8 +60,9 @@ public class AlexAPI {
 			@ApiResponse(code = 400, message = "Bad request"),
 			@ApiResponse(code = 404, message = "Anagrams by word not found") })
 	@RequestMapping(value = "/anagrams/{word}", method = RequestMethod.GET, produces = "application/json")
-	public ResponseEntity<AnagramModel> getAnagramByWord(@PathVariable String word, 
-			@RequestParam(value = "limit") Optional<String> limit) {
+	public ResponseEntity<AnagramModel> getAnagramsByWord(@PathVariable String word, 
+			@RequestParam(value = "limit") Optional<String> limit,
+			@RequestParam(value = "self") Optional<String> self) {
 
 		Optional<Long> longLimit = Optional.empty();
 		if(limit.isPresent()){
@@ -63,7 +72,14 @@ public class AlexAPI {
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
 			}
 		} 
-		return new ResponseEntity<AnagramModel>(service.getAnagramsByWord(word, longLimit), HttpStatus.OK);
+		Optional<Boolean> booleanSelf = Optional.empty();
+		if(self.isPresent()){
+			booleanSelf = Optional.of(Boolean.valueOf(
+				("1".equalsIgnoreCase(self.get()) || "yes".equalsIgnoreCase(self.get()) || 
+				        "true".equalsIgnoreCase(self.get()) || "on".equalsIgnoreCase(self.get()))?true:false
+				));
+		}
+		return new ResponseEntity<AnagramModel>(service.getAnagramsByWord(word, longLimit, booleanSelf), HttpStatus.OK);
 	}
 	
 	@ApiOperation(value = "add new words to the data store")
@@ -159,4 +175,22 @@ public class AlexAPI {
 	public ResponseEntity<ResultModel> medianWordLength(){
 		return new ResponseEntity<ResultModel>(service.medianWordLength(), HttpStatus.OK);
 	}
+	//Optional
+	@ApiOperation(value = "get words with the most anagrams", response = AnagramModel.class)
+	@ApiResponses(value = { 
+			@ApiResponse(code = 200, message = "Words with the most anagrams"),
+			@ApiResponse(code = 500, message = "Internal server error") })
+	@RequestMapping(value = "/anagrams/most", method = RequestMethod.GET, produces = "application/json")
+	public ResponseEntity<AnagramModel> getMostAnagrams(){
+		return new ResponseEntity<AnagramModel>(service.getMostAnagrams(), HttpStatus.OK);
+	} 
+	//Optional
+	@ApiOperation(value = "take a set of words and return whether or not they are all anagrams of each other")
+	@ApiResponses(value = { 
+			@ApiResponse(code = 200, message = "Set of words was analized"),
+			@ApiResponse(code = 500, message = "Internal server error") })
+	@RequestMapping(value = "/anagrams/check", method = RequestMethod.POST, consumes = "application/json")
+    public ResponseEntity<ResultModel> checkIfAllWordsAreInOneAnagramSet(@RequestBody WordModel word) {
+		return new ResponseEntity<ResultModel>(service.checkIfAllWordsAreInOneAnagramSet(word), HttpStatus.OK);
+    }
 }

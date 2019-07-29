@@ -4,14 +4,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.IntSummaryStatistics;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
@@ -56,19 +52,21 @@ public class Dictionary {
 		}
     }
 	
-	public String getDictionaryKey(String word){
+	//O(n*log(n)) n - word length
+	private String getDictionaryKey(String word){
 		if(word==null) return null;
 		return word.chars().sorted().
 		collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).
 		toString();
 	}
 	
-	//O(1)
+	//O(n*log(n)) n - word length
 	public Set<String> getAnagramSet(String word){
+		//retrieving anagrams, word can be out of set
 		return cache.get(this.getDictionaryKey(word));
 	}
 	
-	//O(1)
+	//O(m*n*log(n)) m - words array size, n - word length
 	public void addWords(String...words){
 		Arrays.stream(words).forEach(
 			word->{
@@ -94,6 +92,7 @@ public class Dictionary {
 		return false;
 	}
 	
+	//O(1)
 	public void deleteWords(){
 		cache = new ConcurrentHashMap<String, Set<String>>();
 	}
@@ -112,50 +111,23 @@ public class Dictionary {
 		return false;
 	}
 	
-	//O(n) n - count of anagrams and single words
-	public int countOfWordsInDictionary(){
-		if(cache.values().size()<1) return 0;
-		return cache.values().stream().
-		map(v->v.size()).
-		reduce((s1, s2)->s1+s2).get();
-	}
-	
-	//O(n) n - count of anagrams and single words
-	public int maxWordLength(){
-		if(cache.keySet().size()<1) return 0;
-		return cache.keySet().stream().
-		map(k->k.length()).
-		max(Comparator.comparing(Integer::valueOf)).
-        get();
-	}
-	
-	//O(n) n - count of anagrams and single words
-	public int minWordLength(){
-		if(cache.keySet().size()<1) return 0;
-		return cache.keySet().stream().
-		map(k->k.length()).
-		min(Comparator.comparing(Integer::valueOf)).
-        get();
-	}
-	
-	//O(n) n - count of anagrams and single words
-	public long avgWordLength(){
-		if(cache.keySet().size()<1) return 0;
-		IntSummaryStatistics stats = 
-			cache.keySet().stream().
-			mapToInt(k->k.length()).
-		    summaryStatistics();
-
-		return Math.round(stats.getAverage());
-	}
-	
-	//O(n*log(n)) n - count of anagrams and single words
-	public int medianWordLength(){
-		List<Integer> list = cache.keySet().stream().
-		map(k->k.length()).
-		sorted(Comparator.comparingInt(Integer::intValue)).
-        collect(Collectors.toList());
-		if(list.size()<1) return 0;
-		return list.get(Math.round(list.size()/2));
+	//O(n) n - words array size
+	public boolean checkIfAllWordsAreInOneAnagramSet(String...words){
+		if(words.length<1) return false;
+		
+		if(Arrays.stream(words).
+			map(this::getDictionaryKey).
+			distinct().
+			count()>1) return false;
+		
+		String key = this.getDictionaryKey(words[0]);
+		
+		Set<String> set = cache.get(key);
+		if(set!=null&&set.size()>1){
+			return Arrays.stream(words).
+			filter(s->!set.contains(s)).
+			count()==0;
+		}
+		return false;
 	}
 }
