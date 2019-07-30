@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
  *      An introduction to testing api's using Rest Assured</a>
  *
  */
-public class AlexAPITest {
+public class DictionaryAPITest {
 	
 	private static final String HOST = "http://localhost:3000";
 	

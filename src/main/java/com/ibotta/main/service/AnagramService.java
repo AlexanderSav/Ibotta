@@ -23,10 +23,10 @@ import com.ibotta.main.repository.Dictionary;
  *
  */
 @Service
-public class AnagramService {
+public class AnagramService implements IAnagaramService {
 	
 	@Autowired
-	Dictionary dictionary;
+	private Dictionary dictionary;
 	
 	/**
 	 * Getting all dictionary anagrams

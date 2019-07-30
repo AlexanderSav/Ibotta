@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ibotta.main.model.AnagramModel;
 import com.ibotta.main.model.ResultModel;
 import com.ibotta.main.model.WordModel;
-import com.ibotta.main.service.AnagramService;
+import com.ibotta.main.service.IAnagaramService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -30,10 +30,10 @@ import io.swagger.annotations.ApiResponses;
  */
 @RestController
 @Api
-public class AlexAPI {
+public class DictionaryAPI {
 	
 	@Autowired
-	AnagramService service;
+	private IAnagaramService service;
 
 	@ApiOperation(value = "get all anagrams from the data store, size is optional", response = List.class)
 	@ApiResponses(value = { 
