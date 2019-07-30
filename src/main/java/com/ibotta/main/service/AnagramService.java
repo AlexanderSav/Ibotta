@@ -53,13 +53,13 @@ public class AnagramService {
 	 * @param limit to restrict anagram list
 	 * @return AnagramModel
 	 */
-	public AnagramModel getAnagramsByWord(String word, Optional<Long> limit, Optional<Boolean> booleanSelf){
+	public AnagramModel getAnagramsByWord(String word, Optional<Long> limit, Optional<Boolean> self){
 		Set<String> anagramSet = dictionary.getAnagramSet(word);
 		if(anagramSet!=null&&anagramSet.size()>1){
 
 			AnagramModel anagram = new AnagramModel();
 			
-			Predicate<String> includeProperNouns = s ->(!s.equals(word)&&booleanSelf.isPresent()&&booleanSelf.get())||!booleanSelf.isPresent();
+			Predicate<String> includeProperNouns = s ->(self.isPresent()&&self.get())?!s.equals(word):true;
 			
 			Stream<String>	stream = anagramSet.stream().filter(includeProperNouns);
 
@@ -96,11 +96,18 @@ public class AnagramService {
 	
 	
 	//Optional
+	/**
+	 * Removing anagrams by word in dictionary
+	 * @param word in dictionary
+	 */
 	public boolean deleteAnagramsByWord(String word){
 		return dictionary.deleteAnagramsByWord(word);
 	}
 	
 	//Optional
+	/**
+	 * Getting count of words in dictionary
+	 */
 	public ResultModel countOfWordsInDictionary(){
 		Collection<Set<String>> values = dictionary.getDataStorage().values();
 		
@@ -115,6 +122,9 @@ public class AnagramService {
 	}
 	
 	//Optional
+	/**
+	 * Getting max word length in dictionary
+	 */
 	public ResultModel maxWordLength(){
 		Set<String> keys = dictionary.getDataStorage().keySet();
 		
@@ -130,6 +140,9 @@ public class AnagramService {
 	}
 	
 	//Optional
+	/**
+	 * Getting min word length in dictionary
+	 */
 	public ResultModel minWordLength(){
 		Set<String> keys = dictionary.getDataStorage().keySet();
 		
@@ -145,6 +158,9 @@ public class AnagramService {
 	}
 	
 	//Optional
+	/**
+	 * Getting average word length in dictionary
+	 */
 	public ResultModel avgWordLength(){
 		Set<String> keys = dictionary.getDataStorage().keySet();
 		
@@ -161,6 +177,9 @@ public class AnagramService {
 	}
 	
 	//Optional
+	/**
+	 * Getting median word length in dictionary
+	 */
 	public ResultModel medianWordLength(){
 		Set<String> keys = dictionary.getDataStorage().keySet();
 		
@@ -177,6 +196,9 @@ public class AnagramService {
 	}
 	
 	//Optional
+	/**
+	 * Getting most anagrams in dictionary
+	 */
 	public AnagramModel getMostAnagrams(){
 		Set<String> anagramSet = dictionary.getDataStorage().entrySet().stream().
 				filter(e->e.getValue().size()>1).
@@ -191,6 +213,10 @@ public class AnagramService {
 	}
 	
 	//Optional
+	/**
+	 * Check whether or not they are all anagrams of each other
+	 * return 0 if any word is not dictionary
+	 */
 	public ResultModel checkIfAllWordsAreInOneAnagramSet(WordModel wordModel){
 		ResultModel res = new ResultModel();
 		res.setResult(dictionary.checkIfAllWordsAreInOneAnagramSet(wordModel.getWords())?1:0);

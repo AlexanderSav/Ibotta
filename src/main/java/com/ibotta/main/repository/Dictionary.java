@@ -6,7 +6,7 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import javax.annotation.PostConstruct;
@@ -30,10 +30,34 @@ public class Dictionary {
 	public Map<String, Set<String>> getDataStorage(){
 		return cache;
 	}
+	
+	private Map<String, Set<String>> initCache(){
+		
+		/*
+		 * The HashMap implementation provides constant time performance for (get and put) basic operations 
+		 * i.e the complexity of get() and put() is O(1) , assuming the hash function disperses the elements 
+		 * properly among the buckets. 
+		 */
+		//return new ConcurrentHashMap<String, Set<String>>();
+		
+		
+		/*
+		 * Treemap(ConcurrentSkipListMap) is sorted according to the natural ordering of its keys, or by a 
+		 * Comparator provided at map creation time, depending on which constructor is used. This implementation 
+		 * provides guaranteed log(n)time cost for the containsKey, get, put and remove operations. 
+		 * For search operation,in java 7,it will take O(n) with a linked list. 
+		 * While in java 8 , the same search operation in a tree will cost O(log(n)).
+		 */
+		return new ConcurrentSkipListMap<String, Set<String>>();
+	}
+	
+	private Set<String> initAnagramGroup(){
+		return new CopyOnWriteArraySet<String>();
+	}
 
 	@PostConstruct
     public void init() {
-        cache = new ConcurrentHashMap<String, Set<String>>();
+        cache = initCache();
         
         try (BufferedReader br =  new BufferedReader(new InputStreamReader(
                 this.getClass().getResourceAsStream("/" + dicFileName)))) {
@@ -43,7 +67,7 @@ public class Dictionary {
 				String key = this.getDictionaryKey(word);
 	        	Set<String> set = cache.get(key);
 	        	if(set==null){
-	        		cache.put(key,new CopyOnWriteArraySet<String>());
+	        		cache.put(key, initAnagramGroup());
 	        	}
 	        	cache.get(key).add(word);
 			}
@@ -51,22 +75,19 @@ public class Dictionary {
 			e.printStackTrace();
 		}
     }
-	
-	//O(n*log(n)) n - word length
+
 	private String getDictionaryKey(String word){
 		if(word==null) return null;
 		return word.chars().sorted().
 		collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).
 		toString();
 	}
-	
-	//O(n*log(n)) n - word length
+
 	public Set<String> getAnagramSet(String word){
 		//retrieving anagrams, word can be out of set
 		return cache.get(this.getDictionaryKey(word));
 	}
-	
-	//O(m*n*log(n)) m - words array size, n - word length
+
 	public void addWords(String...words){
 		Arrays.stream(words).forEach(
 			word->{
@@ -80,8 +101,7 @@ public class Dictionary {
 			}
 		);
 	}
-	
-	//O(1)
+
 	public boolean deleteWord(String word){
 		String key = this.getDictionaryKey(word);
 		Set<String> set = cache.get(key);
@@ -91,15 +111,13 @@ public class Dictionary {
 		}
 		return false;
 	}
-	
-	//O(1)
+
 	public void deleteWords(){
-		cache = new ConcurrentHashMap<String, Set<String>>();
+		cache = initCache();
 	}
 	
 	//Optional
-	
-	//O(1)
+
 	public boolean deleteAnagramsByWord(String word){
 		String key = this.getDictionaryKey(word);
 		Set<String> set = cache.get(key);
@@ -110,8 +128,7 @@ public class Dictionary {
 		}
 		return false;
 	}
-	
-	//O(n) n - words array size
+
 	public boolean checkIfAllWordsAreInOneAnagramSet(String...words){
 		if(words.length<1) return false;
 		

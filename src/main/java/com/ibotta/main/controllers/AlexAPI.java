@@ -41,16 +41,8 @@ public class AlexAPI {
 			@ApiResponse(code = 500, message = "Internal server error"),
 			@ApiResponse(code = 404, message = "Anagrams not found") })
 	@RequestMapping(value = "/anagrams", method = RequestMethod.GET, produces = "application/json")
-	public ResponseEntity<List<AnagramModel>> getAnagrams(@RequestParam(value = "size") Optional<String> size) {
-		Optional<Integer> intSize = Optional.empty();
-		if(size.isPresent()){
-			try{
-				intSize = Optional.of(Integer.parseInt(size.get()));
-			}catch(NumberFormatException e){
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-			}
-		} 
-		return new ResponseEntity<List<AnagramModel>>(service.getAnagrams(intSize), HttpStatus.OK);
+	public ResponseEntity<List<AnagramModel>> getAnagrams(@RequestParam(value = "size") Optional<Integer> size) {
+		return new ResponseEntity<List<AnagramModel>>(service.getAnagrams(size), HttpStatus.OK);
 	}
 	
 	@ApiOperation(value = "get anagrams by word from the data store, limit is optional", response = AnagramModel.class)
@@ -61,25 +53,9 @@ public class AlexAPI {
 			@ApiResponse(code = 404, message = "Anagrams by word not found") })
 	@RequestMapping(value = "/anagrams/{word}", method = RequestMethod.GET, produces = "application/json")
 	public ResponseEntity<AnagramModel> getAnagramsByWord(@PathVariable String word, 
-			@RequestParam(value = "limit") Optional<String> limit,
-			@RequestParam(value = "self") Optional<String> self) {
-
-		Optional<Long> longLimit = Optional.empty();
-		if(limit.isPresent()){
-			try{
-				longLimit = Optional.of(Long.parseLong(limit.get()));
-			}catch(NumberFormatException e){
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-			}
-		} 
-		Optional<Boolean> booleanSelf = Optional.empty();
-		if(self.isPresent()){
-			booleanSelf = Optional.of(Boolean.valueOf(
-				("1".equalsIgnoreCase(self.get()) || "yes".equalsIgnoreCase(self.get()) || 
-				        "true".equalsIgnoreCase(self.get()) || "on".equalsIgnoreCase(self.get()))?true:false
-				));
-		}
-		return new ResponseEntity<AnagramModel>(service.getAnagramsByWord(word, longLimit, booleanSelf), HttpStatus.OK);
+			@RequestParam(value = "limit") Optional<Long> limit,
+			@RequestParam(value = "self") Optional<Boolean> self) {
+		return new ResponseEntity<AnagramModel>(service.getAnagramsByWord(word, limit, self), HttpStatus.OK);
 	}
 	
 	@ApiOperation(value = "add new words to the data store")
